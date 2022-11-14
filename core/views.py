@@ -49,16 +49,48 @@ class Watch(View):
             profile = Profile.objects.get(uuid=profile_id)
             movies = Movie.objects.filter(age_limit=profile.age_limit)
 
-            if profile not in request.user.profiles.all():
-                return redirect(to='core:profile_list')
+            try:
+                showcase=movies[0]
+            except :
+                showcase=None
+
+            if profile not in request.user.profiles.all():               
+                return redirect(to='core:profile_list')           
             
             return render(request=request, template_name='movieList.html',context={
-                movies:'movies',
+                'movies':movies,
+                'show_case':showcase
             })
 
-        except:
+        except Profile.DoesNotExist:
             return redirect('core:profile_list')
 
 
+@method_decorator(login_required,name='dispatch')
+class ShowMovieDetail(View):
+    def get(self, request, movie_id, *args, **kwargs):
+        try:
+            movie = Movie.objects.get(uuid=movie_id)
+
+            return render(request = request, template_name='movieDetail.html', context={
+                'movie': movie
+            })
+
+        except Movie.DoesNotExist:
+            return redirect('core:profile_list')
+
+
+@method_decorator(login_required,name='dispatch')
+class ShowMovie(View):
+    def get(self, request, movie_id, *args, **kwargs):
+        try:
+            movie=Movie.objects.get(uuid=movie_id)
+            movie=movie.videos.values()
+
+            return render(request=request, template_name='showMovie.html', context={
+                'movie':list(movie),
+            })
+        except Movie.DoesNotExist:
+            return redirect('core:profile_list') 
 
 
